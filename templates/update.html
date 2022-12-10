@@ -1,14 +1,9 @@
+{% extends 'base.html' %}
+
+
 {% block content %}
-<div class="container">
-   <div class="alert alert-success" role="alert">
-       <p>タイトル：{{object.title}}</p>
-       <p>投稿者：{{object.user}}</p>
-       <p>コメント：{{object.content}}</p>
-        
-       #以下追加
-       {% if object.user == request.user %} #リクエストユーザーと投稿者が等しい場合のみリンク表示
-       <a href="{% url 'update' pk %}" class="btn btn-primary ms-3" tabindex="-1" role="button" aria-disabled="true">編集</a>
-       {% endif %}
-   </div>
-</div>
+<form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="編集">
+</form>
 {% endblock content %}
