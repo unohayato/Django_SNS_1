@@ -1,8 +1,24 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView, CreateView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
 
 from .models import Post
+
+class UpdatePost(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+  model =Post
+  template_name = 'update.html'
+  fields = ['title', 'content']
+  
+  def get_success_url(self, **kwargs):
+    pk = self.kwargs["pk"]
+    return reverse_lazy('detail', kwargs={"pk": pk})
+  
+  def test_func(self, **kwargs):
+       pk = self.kwargs["pk"]
+       post = Post.objects.get(pk=pk)
+       return (post.user == self.request.user) 
+  
+  
 
 class CreatePost(LoginRequiredMixin, CreateView):
   model = Post
