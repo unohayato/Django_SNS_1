@@ -1,7 +1,11 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView
 
 from .models import Post
+
+class DetailPost(LoginRequiredMixin, DetailView):
+  model = Post
+  template_name = 'detail.html'
 
 class Home(LoginRequiredMixin, ListView):
   model = Post
