@@ -1,7 +1,19 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, CreateView
+from django.urls import reverse_lazy
 
 from .models import Post
+
+class CreatePost(LoginRequiredMixin, CreateView):
+  model = Post
+  template_name = 'create.html'
+  fields = ['title', 'content']
+  success_url = reverse_lazy('mypost')
+  
+  def form_valid(self, form):
+    form.instance.user = self.request.user
+    return super().form_valid(form)
+    
 
 class DetailPost(LoginRequiredMixin, DetailView):
   model = Post
