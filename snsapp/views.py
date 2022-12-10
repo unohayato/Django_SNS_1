@@ -1,8 +1,74 @@
+from django.shortcuts import redirect
+from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.models import User
 from django.urls import reverse_lazy
 
-from .models import Post
+from .models import Post, Connection
+
+class FollowList(LoginRequiredMixin, ListView):
+  model = Post
+  template_name = 'list.html'
+
+  def get_queryset(self):
+      my_connection = Connection.objects.get_or_create(user=self.request.user)
+      all_follow = my_connection[0].following.all()
+      return Post.objects.filter(user__in=all_follow)
+
+  def get_context_data(self, *args, **kwargs):
+      context = super().get_context_data(*args, **kwargs)
+      context['connection'] = Connection.objects.get_or_create(user=self.request.user)
+      return context
+
+class FollowBase(LoginRequiredMixin, View):
+   def get(self, request, *args, **kwargs):
+       pk = self.kwargs['pk']
+       target_user = Post.objects.get(pk=pk).user
+       my_connection = Connection.objects.get_or_create(user=self.request.user)
+
+       if target_user in my_connection[0].following.all():
+           obj = my_connection[0].following.remove(target_user)
+       else:
+           obj = my_connection[0].following.add(target_user)
+       return obj
+
+class FollowHome(FollowBase):
+   def get(self, request, *args, **kwargs):
+       super().get(request, *args, **kwargs)
+       return redirect('home')
+
+class FollowDetail(FollowBase):
+   def get(self, request, *args, **kwargs):
+       super().get(request, *args, **kwargs)
+       pk = self.kwargs['pk'] 
+       return redirect('detail', pk)
+
+class LikeBase(LoginRequiredMixin, View):
+   def get(self, request, *args, **kwargs):
+       pk = self.kwargs['pk']
+       related_post = Post.objects.get(pk=pk)
+       
+       if self.request.user in related_post.like.all(): 
+           obj = related_post.like.remove(self.request.user)
+       else:                         
+           obj = related_post.like.add(self.request.user)  
+       return obj
+
+
+class LikeHome(LikeBase):
+   def get(self, request, *args, **kwargs):
+       super().get(request, *args, **kwargs)
+       return redirect('home')
+
+
+class LikeDetail(LikeBase):
+   def get(self, request, *args, **kwargs):
+       super().get(request, *args, **kwargs)
+       pk = self.kwargs['pk'] 
+       return redirect('detail', pk)
+     
+     
 
 class DeletePost(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
    model = Post
