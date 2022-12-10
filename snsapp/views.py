@@ -1,8 +1,18 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 
 from .models import Post
+
+class DeletePost(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+   model = Post
+   template_name = 'delete.html'
+   success_url = reverse_lazy('mypost')
+
+   def test_func(self, **kwargs):
+       pk = self.kwargs["pk"]
+       post = Post.objects.get(pk=pk)
+       return (post.user == self.request.user) 
 
 class UpdatePost(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
   model =Post
